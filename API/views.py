@@ -1,6 +1,6 @@
 from django.shortcuts import render
-from API.models import User, Profile
-from API.serializer import UserSerializer, MyTokenObtainPairSerializer, RegisterSerializer
+from API.models import User, Profile, Todo
+from API.serializer import UserSerializer, MyTokenObtainPairSerializer, RegisterSerializer, TodoSerializer
 from rest_framework.decorators import APIView
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework import generics, status
@@ -27,6 +27,46 @@ def dashboard(request):
         response = f"Hey {request.user} your text is {text}"
         return Response({"resposne":response}, status=status.HTTP_200_OK)
     return Response({}, status=status.HTTP_400_BAD_REQUEST)
+
+class TodoListView(generics.ListCreateAPIView):
+    queryset = Todo.objects.all()
+    serializer_class = TodoSerializer
+
+    def get_queryset(self):
+        user_id = self.kwargs['user_id']
+        user = User.objects.get(id=user_id)
+
+        todo = Todo.objects.filter(user=user)
+        return todo
+
+class TodoDetailView(generics.RetrieveUpdateDestroyAPIView):
+    serializer_class = TodoSerializer
+
+    def get_object(self):
+        user_id = self.kwargs['user_id']
+        todo_id = self.kwargs['todo_id']
+
+        user = User.objects.get(id=user_id)
+        todo = Todo.objects.get(id=todo_id, user=user)
+
+        return todo
+
+
+class TodoMarkAsComplted(generics.RetrieveUpdateDestroyAPIView):
+    serializer_class = TodoSerializer
+
+    def get_object(self):
+        user_id = self.kwargs['user_id']
+        todo_id = self.kwargs['todo_id']
+
+        user = User.objects.get(id=user_id)
+        todo = Todo.objects.get(id=todo_id, user=user)
+
+        todo.completed = True
+        todo.save()
+
+        return todo
+
 
 
 

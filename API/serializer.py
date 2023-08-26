@@ -1,5 +1,5 @@
 from rest_framework_simplejwt.tokens import Token
-from API.models import User, Profile, Todo
+from API.models import User, Profile, Todo, ChatMessage
 from django.contrib.auth.password_validation import validate_password
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework import serializers
@@ -10,6 +10,12 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ['id', 'username', 'email']
+
+class ProfileSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Profile
+        fields = ['id', 'user', 'full_name', 'bio', 'image',]
 
 class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
     @classmethod
@@ -57,3 +63,11 @@ class TodoSerializer(serializers.ModelSerializer):
     class Meta:
         model = Todo
         fields = ('id', 'user', 'title', 'completed', 'date')
+
+class ChatMessageSerializer(serializers.ModelSerializer):
+    sender_profile = ProfileSerializer(read_only=True)
+    receiver_profile = ProfileSerializer(read_only=True)
+    
+    class Meta:
+        model = ChatMessage
+        fields = ('id', 'user', 'sender', 'sender_profile', 'receiver', 'receiver_profile', 'message', 'is_read', 'date')

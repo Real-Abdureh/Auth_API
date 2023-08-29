@@ -13,5 +13,7 @@ urlpatterns = [
     path("todo/<user_id>", views.TodoListView.as_view()),
     path("todo-detail/<user_id>/<todo_id>", views.TodoDetailView.as_view()),
     path("todo-completed/<user_id>/<todo_id>", views.TodoMarkAsComplted.as_view()),
+    path("chat-message/<user_id>/", views.MyInbox.as_view()),
+
     
 ]

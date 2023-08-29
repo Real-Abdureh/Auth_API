@@ -1,6 +1,7 @@
 from django.shortcuts import render
-from API.models import User, Profile, Todo
-from API.serializer import UserSerializer, MyTokenObtainPairSerializer, RegisterSerializer, TodoSerializer
+from django.db.models import Subquery, OuterRef, Q
+from API.models import User, Profile, Todo, ChatMessage
+from API.serializer import UserSerializer, MyTokenObtainPairSerializer, RegisterSerializer, TodoSerializer, ChatMessageSerializer
 from rest_framework.decorators import APIView
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework import generics, status
@@ -66,6 +67,41 @@ class TodoMarkAsComplted(generics.RetrieveUpdateDestroyAPIView):
         todo.save()
 
         return todo
+
+class MyInbox(generics.ListAPIView):
+    serializer_class = ChatMessageSerializer
+
+    def get_queryset(self):
+        user_id = self.kwargs['user_id']
+
+        messages = ChatMessage.objects.filter(
+            id__in=Subquery(
+                User.objects.filter(
+                    Q(sender__receiver=user_id) | Q(receiver__sender=user_id)  # Use | (OR) to combine conditions
+                ).distinct().annotate(
+                    last_msg=Subquery(
+                        ChatMessage.objects.filter(
+                            Q(sender=OuterRef('sender'), receiver=user_id) |  # Use | (OR) to combine conditions
+                            Q(receiver=OuterRef('sender'), sender=user_id)
+                        ).order_by("-id")[:1].values_list("id", flat=True)
+                    )
+                ).values_list("last_msg", flat=True)
+            )
+        ).order_by("-id")
+
+        return messages
+
+
+
+
+
+
+
+
+    
+        
+
+
 
 
 
